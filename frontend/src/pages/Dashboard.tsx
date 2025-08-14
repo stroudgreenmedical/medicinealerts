@@ -24,6 +24,7 @@ import {
   Visibility as ViewIcon,
   Download as DownloadIcon,
   Refresh as RefreshIcon,
+  Block as BlockIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -181,16 +182,16 @@ function Dashboard() {
 
       {/* Stats Cards */}
       <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatsCard
             title="New Alerts"
             value={stats?.new_alerts || 0}
             icon={<WarningIcon fontSize="large" />}
             color="primary"
-            onClick={() => navigate('/alerts?status=New')}
+            onClick={() => navigate('/alerts?tab=active')}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatsCard
             title="Urgent Alerts"
             value={stats?.urgent_alerts || 0}
@@ -199,7 +200,7 @@ function Dashboard() {
             onClick={() => navigate('/alerts?priority=urgent')}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatsCard
             title="Overdue"
             value={stats?.overdue_alerts || 0}
@@ -208,13 +209,22 @@ function Dashboard() {
             onClick={() => navigate('/alerts?status=overdue')}
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={2.4}>
           <StatsCard
             title="Completed"
             value={stats?.completed_alerts || 0}
             icon={<CompletedIcon fontSize="large" />}
             color="success"
-            onClick={() => navigate('/alerts?status=Completed')}
+            onClick={() => navigate('/alerts?tab=completed')}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <StatsCard
+            title="Not Relevant"
+            value={stats?.not_relevant_alerts || 0}
+            icon={<BlockIcon fontSize="large" />}
+            color="default"
+            onClick={() => navigate('/alerts?tab=notRelevant')}
           />
         </Grid>
       </Grid>
@@ -319,16 +329,80 @@ function Dashboard() {
 
           <Paper sx={{ p: 2 }}>
             <Typography variant="h6" gutterBottom>
-              Alert Types
+              Alert Categories
             </Typography>
-            {stats?.alerts_by_type && Object.entries(stats.alerts_by_type).map(([type, count]) => (
-              <Box key={type} display="flex" justifyContent="space-between" mb={1}>
-                <Typography variant="body2">{type || 'Unknown'}</Typography>
-                <Typography variant="body2" fontWeight="bold">
-                  {count as number}
-                </Typography>
-              </Box>
-            ))}
+            {(() => {
+              // Define all 8 alert categories
+              const allCategories = [
+                { name: 'Medicines Recall', icon: '💊', color: '#ff9800' },
+                { name: 'National Patient Safety Alert', icon: '⚠️', color: '#f44336' },
+                { name: 'Medical Device Alert', icon: '🔧', color: '#2196f3' },
+                { name: 'MHRA Safety Roundup', icon: '📋', color: '#9c27b0' },
+                { name: 'Drug Safety Update', icon: '💉', color: '#3f51b5' },
+                { name: 'Medicine Supply Alert', icon: '📦', color: '#00bcd4' },
+                { name: 'Serious Shortage Protocol', icon: '🚨', color: '#ff5722' },
+                { name: 'CAS Distribution', icon: '📢', color: '#607d8b' }
+              ];
+              
+              // Get counts from stats, defaulting to 0
+              const typeCounts = stats?.alerts_by_type || {};
+              
+              return allCategories.map(category => {
+                const count = typeCounts[category.name] || 0;
+                const handleCategoryClick = () => {
+                  if (count > 0) {
+                    // Navigate to alerts page with category filter
+                    navigate(`/alerts?category=${encodeURIComponent(category.name)}`);
+                  }
+                };
+                
+                return (
+                  <Box 
+                    key={category.name} 
+                    display="flex" 
+                    justifyContent="space-between" 
+                    alignItems="center"
+                    mb={1}
+                    onClick={handleCategoryClick}
+                    sx={{ 
+                      opacity: count === 0 ? 0.6 : 1,
+                      cursor: count > 0 ? 'pointer' : 'default',
+                      '&:hover': count > 0 ? { 
+                        bgcolor: 'action.hover',
+                        transform: 'translateX(4px)',
+                        transition: 'all 0.2s'
+                      } : {},
+                      p: 1,
+                      borderRadius: 1,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2" fontSize="1.2em">{category.icon}</Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: count > 0 ? category.color : 'text.secondary',
+                          fontWeight: count > 0 ? 500 : 400
+                        }}
+                      >
+                        {category.name}
+                      </Typography>
+                    </Box>
+                    <Chip 
+                      label={count} 
+                      size="small" 
+                      color={count > 0 ? "primary" : "default"}
+                      variant={count > 0 ? "filled" : "outlined"}
+                      sx={{ fontWeight: 'bold' }}
+                    />
+                  </Box>
+                );
+              });
+            })()}
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+              Click a category to view alerts
+            </Typography>
           </Paper>
         </Grid>
       </Grid>

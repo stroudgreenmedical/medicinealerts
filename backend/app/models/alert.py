@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, Float, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, Float, Enum as SQLEnum, ForeignKey
 from sqlalchemy.sql import func
 from datetime import datetime
 import enum
@@ -69,17 +69,17 @@ class Alert(Base):
     emis_search_terms = Column(Text)
     
     # Implementation Tracking
-    emis_search_completed = Column(Boolean, default=False)
+    emis_search_completed = Column(Boolean)
     emis_search_date = Column(DateTime)
     emis_search_reason = Column(Text)  # Why EMIS search wasn't done
     patients_affected_count = Column(Integer)
     
     # Emergency Drugs Check
-    emergency_drugs_check = Column(Boolean, default=False)
+    emergency_drugs_check = Column(Boolean)
     emergency_drugs_affected = Column(Text)  # Which emergency drugs are affected
     
     # Communication
-    practice_team_notified = Column(Boolean, default=False)
+    practice_team_notified = Column(Boolean)
     practice_team_notified_date = Column(DateTime)
     team_notification_method = Column(String)  # Email/Meeting/Phone/Multiple
     patients_contacted = Column(String)  # Yes/No/In Progress
@@ -87,13 +87,13 @@ class Alert(Base):
     communication_template = Column(String)
     
     # Patient Harm Tracking
-    medication_stopped = Column(Boolean, default=False)
+    medication_stopped = Column(Boolean)
     medication_stopped_date = Column(DateTime)
-    medication_alternative_provided = Column(Boolean, default=False)
+    medication_alternative_provided = Column(Boolean)
     medication_not_stopped_reason = Column(Text)
-    patient_harm_assessed = Column(Boolean, default=False)
+    patient_harm_assessed = Column(Boolean)
     harm_assessment_planned_date = Column(DateTime)
-    patient_harm_occurred = Column(Boolean, default=False)
+    patient_harm_occurred = Column(Boolean)
     harm_severity = Column(String)  # Minor/Moderate/Severe
     patient_harm_details = Column(Text)
     recalls_completed = Column(Boolean)
@@ -102,9 +102,9 @@ class Alert(Base):
     action_completed_date = Column(DateTime)
     time_to_first_review = Column(Float)  # Hours
     time_to_completion = Column(Float)  # Hours
-    evidence_uploaded = Column(Boolean, default=False)
+    evidence_uploaded = Column(Boolean)
     evidence_links = Column(Text)
-    cqc_reportable = Column(Boolean, default=False)
+    cqc_reportable = Column(Boolean)
     notes = Column(Text)
     
     # System Metadata
@@ -113,5 +113,11 @@ class Alert(Base):
     last_synced = Column(DateTime)
     data_source = Column(String, default="GOV.UK")
     backfilled = Column(Boolean, default=False)
-    teams_notified = Column(Boolean, default=False)
+    teams_notified = Column(Boolean)
     teams_notified_date = Column(DateTime)
+    
+    # Multi-source tracking
+    alert_category = Column(String(50))  # One of 8 categories from update_alert_sorting.md
+    source_urls = Column(Text)  # JSON array of all source URLs
+    is_duplicate = Column(Boolean, default=False)
+    primary_alert_id = Column(Integer, ForeignKey('alerts.id'))  # Reference to primary if duplicate

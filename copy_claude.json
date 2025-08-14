@@ -1,0 +1,46 @@
+{
+    "mcpServers": {
+      "filesystem": {
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-filesystem",
+          "/Users/anjan/Desktop",
+          "/Users/anjan/Downloads"
+        ],
+        "command": "npx"
+      },
+      "fleur": {
+        "args": [
+          "--from",
+          "git+https://github.com/fleuristes/fleur-mcp",
+          "fleur-mcp"
+        ],
+        "command": "/Users/anjan/.local/bin/uvx"
+      },
+      "servers": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@smithery/cli@latest",
+          "run",
+          "@jlia0/servers",
+          "--key",
+          "7ca7ad2f-d14b-433e-ae95-c33651f031f1",
+          "--profile",
+          "lively-porpoise-e4Ue1a"
+        ]
+      },
+      "synology": {
+        "command": "sshpass",
+        "args": [
+          "-p",
+          "kugdy9-boqqiz-qegmEx",
+          "ssh",
+          "-o",
+          "StrictHostKeyChecking=no",
+          "anjan@192.168.0.2",
+          "cd /volume2/docker/mcp-server-synology && /usr/local/bin/docker-compose run --rm synology-mcp"
+        ]
+      }
+    }
+  }

@@ -313,16 +313,9 @@ function AlertDetail() {
         practice_team_notified: data.practice_team_notified,
       });
       
-      // Initialize updates with existing values for yes-no fields
-      const initialUpdates: AlertUpdate = {};
-      if (data.emis_search_completed !== null) initialUpdates.emis_search_completed = data.emis_search_completed;
-      if (data.emergency_drugs_check !== null) initialUpdates.emergency_drugs_check = data.emergency_drugs_check;
-      if (data.practice_team_notified !== null) initialUpdates.practice_team_notified = data.practice_team_notified;
-      if (data.medication_stopped !== null) initialUpdates.medication_stopped = data.medication_stopped;
-      if (data.patient_harm_assessed !== null) initialUpdates.patient_harm_assessed = data.patient_harm_assessed;
-      if (data.patient_harm_occurred !== null) initialUpdates.patient_harm_occurred = data.patient_harm_occurred;
-      if (data.medication_alternative_provided !== null) initialUpdates.medication_alternative_provided = data.medication_alternative_provided;
-      setUpdates(initialUpdates);
+      // Don't initialize updates - let them remain undefined until user interacts
+      // This prevents the bug where checkboxes appear pre-filled
+      setUpdates({});
       
       // Set initial active step based on completion
       if (data.date_first_reviewed) setActiveStep(1);
@@ -424,9 +417,15 @@ function AlertDetail() {
   const checklistItems = getChecklistItems(alert, updates);
   const checklistProgress = checklistItems.filter(
     item => {
-      const value = updates[item.field] ?? alert[item.field as keyof AlertType];
+      const hasUpdate = updates.hasOwnProperty(item.field);
+      const updateValue = updates[item.field];
+      const alertValue = alert[item.field as keyof AlertType];
+      const value = hasUpdate ? updateValue : alertValue;
+      
       if (item.type === 'yes-no') {
-        return value === true || value === false; // Only true/false counts for yes-no
+        // For yes-no, only count if explicitly answered (not null/undefined)
+        return (hasUpdate && (updateValue === true || updateValue === false)) || 
+               (!hasUpdate && alertValue !== null && alertValue !== undefined);
       }
       return value !== null && value !== undefined && value !== '';
     }
@@ -564,6 +563,12 @@ function AlertDetail() {
                 <Chip label={alert.priority} variant="outlined" />
               )}
               <Chip label={alert.status} color="primary" />
+              {alert.alert_category && (
+                <Chip label={alert.alert_category} variant="outlined" color="info" />
+              )}
+              {alert.data_source && (
+                <Chip label={`Source: ${alert.data_source}`} size="small" variant="outlined" />
+              )}
             </Box>
             
             <Typography variant="h5" gutterBottom>
@@ -581,8 +586,9 @@ function AlertDetail() {
               fullWidth
               variant="outlined"
               startIcon={<ExternalLinkIcon />}
-              href={alert.url}
+              href={alert.url?.startsWith('http') ? alert.url : `https://www.gov.uk${alert.url}`}
               target="_blank"
+              rel="noopener noreferrer"
               sx={{ mb: 1 }}
             >
               View Official Alert
@@ -612,9 +618,16 @@ function AlertDetail() {
             
             <Stepper activeStep={activeStep} orientation="vertical">
               {checklistItems.map((item, index) => {
-                const currentValue = updates[item.field] ?? alert[item.field as keyof AlertType];
+                // Check updates first, then fall back to alert data
+                const hasUpdate = updates.hasOwnProperty(item.field);
+                const updateValue = updates[item.field];
+                const alertValue = alert[item.field as keyof AlertType];
+                const currentValue = hasUpdate ? updateValue : alertValue;
+                
+                // For yes-no fields, only consider them completed if explicitly answered
                 const isCompleted = item.type === 'yes-no' 
-                  ? currentValue === true || currentValue === false  // Only true/false counts as completed for yes-no
+                  ? (hasUpdate && (updateValue === true || updateValue === false)) || 
+                    (!hasUpdate && alertValue !== null && alertValue !== undefined)
                   : currentValue !== null && currentValue !== undefined && currentValue !== '';
                 
                 return (

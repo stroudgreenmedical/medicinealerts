@@ -92,13 +92,19 @@ class GovUKClient:
         all_results.extend(updates.get("results", []))
         
         # Filter by date if needed
-        cutoff_date = datetime.now() - timedelta(days=days)
+        # Use timezone-aware datetime to match GOV.UK dates
+        from datetime import timezone
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         filtered = []
         
         for result in all_results:
             pub_date = self._parse_date(result.get("public_timestamp"))
-            if pub_date and pub_date >= cutoff_date:
-                filtered.append(result)
+            if pub_date:
+                # Ensure pub_date is timezone-aware for comparison
+                if pub_date.tzinfo is None:
+                    pub_date = pub_date.replace(tzinfo=timezone.utc)
+                if pub_date >= cutoff_date:
+                    filtered.append(result)
         
         return filtered
     
@@ -133,13 +139,22 @@ class GovUKClient:
             
             # Filter by date if specified
             if since_date:
+                # Ensure since_date is timezone-aware
+                from datetime import timezone
+                if since_date.tzinfo is None:
+                    since_date = since_date.replace(tzinfo=timezone.utc)
+                    
                 for result in results:
                     pub_date = self._parse_date(result.get("public_timestamp"))
-                    if pub_date and pub_date >= since_date:
-                        all_results.append(result)
-                    elif pub_date and pub_date < since_date:
-                        # Results are ordered by date desc, so we can stop
-                        return all_results
+                    if pub_date:
+                        # Ensure pub_date is timezone-aware for comparison
+                        if pub_date.tzinfo is None:
+                            pub_date = pub_date.replace(tzinfo=timezone.utc)
+                        if pub_date >= since_date:
+                            all_results.append(result)
+                        elif pub_date < since_date:
+                            # Results are ordered by date desc, so we can stop
+                            return all_results
             else:
                 all_results.extend(results)
             

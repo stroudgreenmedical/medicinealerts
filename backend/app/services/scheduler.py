@@ -14,6 +14,7 @@ from .govuk_client import GovUKClient
 from .triage import TriageService
 from .teams_notify import TeamsNotificationService
 from .alert_processor import AlertProcessor
+from .feed_reader import FeedReaderService
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ class SchedulerService:
         self.triage_service = TriageService()
         self.teams_service = TeamsNotificationService()
         self.alert_processor = AlertProcessor()
+        self.feed_reader = FeedReaderService()
         
     def start(self):
         """Start the scheduler with configured jobs"""
@@ -62,6 +64,14 @@ class SchedulerService:
             IntervalTrigger(hours=1),
             id="check_overdue",
             name="Check for overdue alerts"
+        )
+        
+        # RSS/ATOM feed polling - every hour
+        self.scheduler.add_job(
+            self.poll_rss_feeds,
+            IntervalTrigger(hours=1),
+            id="poll_rss_feeds",
+            name="Poll RSS/ATOM feeds for alerts"
         )
         
         self.scheduler.start()
@@ -251,13 +261,25 @@ class SchedulerService:
                 since_date=since_date
             )
             
-            # Also fetch drug safety updates
-            dsu_data = await self.govuk_client.fetch_all_alerts(
-                document_type="drug_safety_update",
-                since_date=since_date
-            )
+            # Fetch additional document types for comprehensive coverage
+            document_types = [
+                "drug_safety_update",
+                "press_release",  # May contain SSPs and supply updates
+                "guidance",       # Safety guidance
+                "notice"          # Official notices
+            ]
             
-            all_alerts = alerts_data + dsu_data
+            for doc_type in document_types:
+                try:
+                    data = await self.govuk_client.fetch_all_alerts(
+                        document_type=doc_type,
+                        since_date=since_date
+                    )
+                    alerts_data.extend(data)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch {doc_type} for backfill: {e}")
+            
+            all_alerts = alerts_data
             logger.info(f"Found {len(all_alerts)} alerts to backfill")
             
             db = SessionLocal()
@@ -298,3 +320,26 @@ class SchedulerService:
         except Exception as e:
             logger.error(f"Error in backfill: {e}")
             raise
+    
+    async def poll_rss_feeds(self):
+        """Poll RSS/ATOM feeds for new alerts"""
+        logger.info("Starting RSS feed polling")
+        
+        try:
+            results = await self.feed_reader.poll_all_feeds()
+            
+            total_new = sum(results.values())
+            if total_new > 0:
+                logger.info(f"RSS polling complete: {total_new} new alerts from feeds")
+                
+                # Send notification if configured
+                await self.teams_service.send_summary_notification(
+                    new_alerts=total_new,
+                    relevant_alerts=0,  # Will be determined by triage
+                    period_hours=1
+                )
+            else:
+                logger.info("RSS polling complete: no new alerts")
+                
+        except Exception as e:
+            logger.error(f"Error in RSS feed polling: {e}")

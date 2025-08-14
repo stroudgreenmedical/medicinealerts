@@ -95,6 +95,11 @@ export interface Alert {
   created_at: string;
   updated_at: string;
   teams_notified?: boolean | null;
+  alert_category?: string;
+  data_source?: string;
+  source_urls?: string;
+  is_duplicate?: boolean;
+  primary_alert_id?: number;
 }
 
 export interface DashboardStats {
@@ -142,6 +147,7 @@ export interface AlertUpdate {
   cqc_reportable?: boolean | null;
   notes?: string;
   final_relevance?: string;
+  alert_category?: string;
 }
 
 // Auth API
@@ -175,6 +181,7 @@ export const alertsApi = {
     severity?: string;
     relevance?: string;
     search?: string;
+    category?: string;
   }) => {
     const response = await api.get('/api/alerts/', { params });
     return response.data;
@@ -192,6 +199,11 @@ export const alertsApi = {
   
   markReviewed: async (id: number) => {
     const response = await api.post(`/api/alerts/${id}/mark-reviewed`);
+    return response.data;
+  },
+
+  markNotRelevant: async (id: number) => {
+    const response = await api.post(`/api/alerts/${id}/mark-not-relevant`);
     return response.data;
   },
   

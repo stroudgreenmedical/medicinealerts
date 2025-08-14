@@ -83,6 +83,15 @@ async def get_dashboard_stats(
         text("SELECT COUNT(*) FROM alerts WHERE status = 'Completed'")
     ).scalar()
     
+    # Not relevant alerts (Closed status with Auto-Not-Relevant)
+    not_relevant_alerts = db.execute(
+        text("""
+            SELECT COUNT(*) FROM alerts 
+            WHERE status = 'Closed' 
+            AND auto_relevance = 'Auto-Not-Relevant'
+        """)
+    ).scalar()
+    
     # Alerts by status
     status_results = db.execute(
         text("SELECT status, COUNT(*) FROM alerts GROUP BY status")
@@ -98,13 +107,13 @@ async def get_dashboard_stats(
         for priority, count in priority_results
     }
     
-    # Alerts by type
-    type_results = db.execute(
-        text("SELECT alert_type, COUNT(*) FROM alerts GROUP BY alert_type")
+    # Alerts by category (8 defined categories)
+    category_results = db.execute(
+        text("SELECT alert_category, COUNT(*) FROM alerts GROUP BY alert_category")
     ).fetchall()
     alerts_by_type = {
-        alert_type if alert_type else "Unknown": count 
-        for alert_type, count in type_results
+        alert_category if alert_category else "Unknown": count 
+        for alert_category, count in category_results
     }
     
     # Recent alerts (last 10) - using ORM carefully
@@ -203,6 +212,7 @@ async def get_dashboard_stats(
         urgent_alerts=urgent_alerts or 0,
         overdue_alerts=overdue_count,
         completed_alerts=completed_alerts or 0,
+        not_relevant_alerts=not_relevant_alerts or 0,
         alerts_by_status=alerts_by_status,
         alerts_by_priority=alerts_by_priority,
         alerts_by_type=alerts_by_type,

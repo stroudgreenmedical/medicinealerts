@@ -71,6 +71,7 @@ class AlertUpdate(BaseModel):
     cqc_reportable: Optional[bool] = None
     notes: Optional[str] = None
     final_relevance: Optional[str] = None
+    alert_category: Optional[str] = None
 
 
 class AlertResponse(AlertBase):
@@ -129,6 +130,11 @@ class AlertResponse(AlertBase):
     created_at: datetime
     updated_at: datetime
     teams_notified: Optional[bool]
+    alert_category: Optional[str] = None
+    data_source: Optional[str] = None
+    source_urls: Optional[str] = None
+    is_duplicate: Optional[bool] = None
+    primary_alert_id: Optional[int] = None
     
     class Config:
         from_attributes = True
@@ -145,6 +151,7 @@ class DashboardStats(BaseModel):
     urgent_alerts: int
     overdue_alerts: int
     completed_alerts: int
+    not_relevant_alerts: int
     alerts_by_status: dict
     alerts_by_priority: dict
     alerts_by_type: dict

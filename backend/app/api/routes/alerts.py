@@ -18,11 +18,12 @@ router = APIRouter(prefix="/alerts", tags=["alerts"])
 async def get_alerts(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    status: Optional[AlertStatusEnum] = None,
-    priority: Optional[PriorityEnum] = None,
-    severity: Optional[SeverityEnum] = None,
+    status: Optional[str] = None,  # Changed to str to accept comma-separated values
+    priority: Optional[str] = None,  # Changed to str for consistency
+    severity: Optional[str] = None,  # Changed to str for consistency
     relevance: Optional[str] = None,
     search: Optional[str] = None,
+    category: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user)
 ):
@@ -34,20 +35,32 @@ async def get_alerts(
     params = {}
     
     if status:
-        where_conditions.append("status = :status")
-        params["status"] = status.value
+        # Handle comma-separated status values
+        if ',' in status:
+            status_list = [s.strip() for s in status.split(',')]
+            placeholders = ', '.join([f":status_{i}" for i in range(len(status_list))])
+            where_conditions.append(f"status IN ({placeholders})")
+            for i, s in enumerate(status_list):
+                params[f"status_{i}"] = s
+        else:
+            where_conditions.append("status = :status")
+            params["status"] = status
     
     if priority:
         where_conditions.append("priority = :priority")
-        params["priority"] = priority.value
+        params["priority"] = priority
     
     if severity:
         where_conditions.append("severity = :severity")
-        params["severity"] = severity.value
+        params["severity"] = severity
     
     if relevance:
         where_conditions.append("(auto_relevance = :relevance OR final_relevance = :relevance)")
         params["relevance"] = relevance
+    
+    if category:
+        where_conditions.append("alert_category = :category")
+        params["category"] = category
     
     if search:
         where_conditions.append("""
@@ -81,7 +94,8 @@ async def get_alerts(
                patient_harm_occurred, harm_severity, patient_harm_details,
                recalls_completed, action_completed_date, time_to_first_review,
                time_to_completion, evidence_uploaded, evidence_links, cqc_reportable,
-               notes, created_at, updated_at, teams_notified
+               notes, created_at, updated_at, teams_notified,
+               alert_category, data_source, source_urls, is_duplicate, primary_alert_id
         FROM alerts 
         WHERE {where_clause}
         ORDER BY published_date DESC NULLS LAST, created_at DESC
@@ -155,6 +169,11 @@ async def get_alerts(
             "created_at": row[56],
             "updated_at": row[57],
             "teams_notified": True if row[58] == 1 else False if row[58] == 0 else None,
+            "alert_category": row[59],
+            "data_source": row[60],
+            "source_urls": row[61],
+            "is_duplicate": True if row[62] == 1 else False if row[62] == 0 else None,
+            "primary_alert_id": row[63],
         }
         alerts.append(AlertResponse(**alert_dict))
     
@@ -189,7 +208,8 @@ async def get_alert(
                patient_harm_occurred, harm_severity, patient_harm_details,
                recalls_completed, action_completed_date, time_to_first_review,
                time_to_completion, evidence_uploaded, evidence_links, cqc_reportable,
-               notes, created_at, updated_at, teams_notified
+               notes, created_at, updated_at, teams_notified,
+               alert_category, data_source, source_urls, is_duplicate, primary_alert_id
         FROM alerts 
         WHERE id = :alert_id
     """)
@@ -395,6 +415,45 @@ async def mark_alert_reviewed(
     return await get_alert(alert_id, db, current_user)
 
 
+@router.post("/{alert_id}/mark-not-relevant", response_model=AlertResponse)
+async def mark_alert_not_relevant(
+    alert_id: int,
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Mark alert as not relevant
+    """
+    # Check if alert exists
+    check_query = text("SELECT id FROM alerts WHERE id = :alert_id")
+    exists = db.execute(check_query, {"alert_id": alert_id}).fetchone()
+    
+    if not exists:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    
+    now = datetime.now()
+    
+    # Update alert
+    update_query = text("""
+        UPDATE alerts 
+        SET status = 'Closed',
+            final_relevance = 'Not-Relevant',
+            date_first_reviewed = COALESCE(date_first_reviewed, :now),
+            action_completed_date = :now,
+            updated_at = :now
+        WHERE id = :alert_id
+    """)
+    
+    db.execute(update_query, {
+        "alert_id": alert_id,
+        "now": now
+    })
+    db.commit()
+    
+    # Return updated alert
+    return await get_alert(alert_id, db, current_user)
+
+
 @router.get("/overdue/list")
 async def get_overdue_alerts(
     db: Session = Depends(get_db),
@@ -426,7 +485,8 @@ async def get_overdue_alerts(
                patient_harm_occurred, harm_severity, patient_harm_details,
                recalls_completed, action_completed_date, time_to_first_review,
                time_to_completion, evidence_uploaded, evidence_links, cqc_reportable,
-               notes, created_at, updated_at, teams_notified
+               notes, created_at, updated_at, teams_notified,
+               alert_category, data_source, source_urls, is_duplicate, primary_alert_id
         FROM alerts 
         WHERE status IN ('New', 'Action Required')
         AND (
@@ -512,6 +572,11 @@ async def get_overdue_alerts(
             "created_at": row[56],
             "updated_at": row[57],
             "teams_notified": True if row[58] == 1 else False if row[58] == 0 else None,
+            "alert_category": row[59],
+            "data_source": row[60],
+            "source_urls": row[61],
+            "is_duplicate": True if row[62] == 1 else False if row[62] == 0 else None,
+            "primary_alert_id": row[63],
         }
         alerts.append(AlertResponse(**alert_dict))
     

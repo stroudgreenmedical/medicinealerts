@@ -71,12 +71,13 @@ class AlertProcessor:
             else:
                 alert.medical_specialties = str(specialties) if specialties else ""
             
-            # Perform triage
-            relevance, reason, severity, priority = self.triage_service.triage_alert(alert_data)
+            # Perform triage (now returns category as well)
+            relevance, reason, severity, priority, category = self.triage_service.triage_alert(alert_data)
             alert.auto_relevance = relevance
             alert.relevance_reason = reason
             alert.severity = Severity(severity)
             alert.priority = Priority(priority)
+            alert.alert_category = category
             
             # Set initial status based on relevance
             if relevance == "Auto-Relevant":

@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp"
+      ]
+    },
+    "synology-home": {
+      "// your existing synology-home config": "keep this as is"
+    },
+    "synology-work": {
+      "// your existing synology-work config": "keep this as is"
+    }
+  }
+}

@@ -1,6 +1,6 @@
-# MHRA Alerts Automator
+# Medicines Alerts Manager
 
-An automated system for monitoring, triaging, and managing MHRA (Medicines and Healthcare products Regulatory Agency) alerts for GP practices. The system polls GOV.UK APIs, automatically classifies alerts for GP relevance, sends Teams notifications, and provides a web dashboard for pharmacists to track and manage their response to alerts.
+An automated system for monitoring, triaging, and managing medicines and medical device safety alerts from MHRA (Medicines and Healthcare products Regulatory Agency) and other sources for GP practices. The system polls GOV.UK APIs, automatically classifies alerts for GP relevance, sends Teams notifications, and provides a web dashboard for pharmacists to track and manage their response to alerts.
 
 ## Features
 

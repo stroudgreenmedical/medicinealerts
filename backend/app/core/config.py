@@ -6,7 +6,7 @@ import secrets
 
 class Settings(BaseSettings):
     # Application
-    APP_NAME: str = "MHRA Alerts Automator"
+    APP_NAME: str = "Medicines Alerts Manager"
     VERSION: str = "1.0.0"
     DEBUG: bool = False
     

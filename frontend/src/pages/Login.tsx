@@ -48,7 +48,7 @@ function Login({ onLogin }: LoginProps) {
       >
         <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
           <Typography component="h1" variant="h4" align="center" gutterBottom>
-            MHRA Alerts Automator
+            Medicines Alerts Manager
           </Typography>
           <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
             NHS North Central London ICB

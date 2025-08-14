@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     Manage application lifecycle
     """
     # Startup
-    logger.info("Starting MHRA Alerts Automator")
+    logger.info("Starting Medicines Alerts Manager")
     
     # Create database tables
     Base.metadata.create_all(bind=engine)
@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down MHRA Alerts Automator")
+    logger.info("Shutting down Medicines Alerts Manager")
     scheduler_service.stop()
 
 

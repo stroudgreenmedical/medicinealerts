@@ -71,7 +71,7 @@ function Layout({ onLogout }: LayoutProps) {
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap>
-          MHRA Alerts
+          Medicines Alerts
         </Typography>
       </Toolbar>
       <List>
@@ -123,7 +123,7 @@ function Layout({ onLogout }: LayoutProps) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            MHRA Alerts Automator
+            Medicines Alerts Manager
           </Typography>
           
           <Badge badgeContent={urgentCount} color="error" sx={{ mr: 2 }}>
