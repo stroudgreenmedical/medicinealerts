@@ -18,3 +18,4 @@ tenacity==8.2.3
 pytest==7.4.4
 pytest-asyncio==0.23.3
 python-dotenv==1.0.0
+feedparser==6.0.11

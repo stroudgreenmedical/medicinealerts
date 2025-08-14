@@ -9,23 +9,16 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests if available
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// No auth needed - handled by Cloudflare
+// api.interceptors.request.use((config) => {
+//   return config;
+// });
 
-// Handle auth errors
+// Handle errors but not auth (handled by Cloudflare)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
+    // Don't redirect on 401 - Cloudflare handles auth
     return Promise.reject(error);
   }
 );

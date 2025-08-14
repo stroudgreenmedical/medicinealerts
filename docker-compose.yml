@@ -6,7 +6,7 @@ services:
     container_name: mhra-alerts-backend
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8081:8080"  # Changed from 8080 to 8081 to avoid conflict with RAG app
     volumes:
       # Use absolute paths for Synology
       - /volume1/docker/mhra-alerts/data:/app/data
@@ -15,6 +15,7 @@ services:
     environment:
       - DATABASE_URL=sqlite:////app/data/alerts.db
       - PYTHONUNBUFFERED=1
+      - PORT=8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -31,6 +32,7 @@ services:
           memory: 128M
     networks:
       - mhra-network
+    user: "1026:100"  # Synology docker group
 
   frontend:
     build: ./frontend
@@ -39,14 +41,18 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     environment:
-      - REACT_APP_API_URL=http://synology.local:8080
+      - REACT_APP_API_URL=http://192.168.0.32:8081  # Updated to use port 8081
     deploy:
       resources:
         limits:
           cpus: '0.5'
           memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
     networks:
       - mhra-network
 

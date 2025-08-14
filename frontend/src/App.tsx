@@ -74,12 +74,12 @@ const theme = createTheme({
 });
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Always authenticated - Cloudflare handles auth
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
+    // Always authenticated - auth handled by Cloudflare
+    setIsAuthenticated(true);
   }, []);
 
   const handleLogin = () => {
@@ -87,8 +87,9 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    // No-op - auth handled by Cloudflare
+    // Could redirect to Cloudflare logout if needed
+    window.location.href = '/';
   };
 
   return (

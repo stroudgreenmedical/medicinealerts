@@ -12,23 +12,16 @@ security = HTTPBearer()
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = None,
     db: Session = Depends(get_db)
 ) -> str:
     """
-    Validate JWT token and return current user
+    Bypass authentication - return default user
+    Authentication will be handled by Cloudflare
     """
-    token = credentials.credentials
-    username = verify_token(token)
-    
-    if not username:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return username
+    # Always return the default admin user
+    # Cloudflare will handle actual authentication
+    return settings.ADMIN_EMAIL
 
 
 def get_current_user_optional(
