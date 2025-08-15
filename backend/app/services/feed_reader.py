@@ -26,14 +26,21 @@ class FeedReaderService:
         'GOV_UK_DRUG_DEVICE': {
             'url': 'https://www.gov.uk/drug-device-alerts.atom',
             'source': 'GOV.UK ATOM',
-            'type': 'atom'
+            'type': 'atom',
+            'category': None  # Auto-detect category
         },
-        # Future feeds can be added here
-        # 'NHS_ENGLAND_SAFETY': {
-        #     'url': 'https://www.england.nhs.uk/patient-safety-alerts.atom',
-        #     'source': 'NHS England',
-        #     'type': 'atom'
-        # }
+        'MHRA_DSU': {
+            'url': 'https://www.gov.uk/drug-safety-update.atom',
+            'source': 'MHRA DSU',
+            'type': 'atom',
+            'category': 'Drug Safety Update'
+        },
+        'NHS_ENGLAND_PSA': {
+            'url': 'https://www.england.nhs.uk/feed/?post_type=psa',
+            'source': 'NHS England PSA',
+            'type': 'rss',
+            'category': 'National Patient Safety Alert'
+        }
     }
     
     def __init__(self):
@@ -67,13 +74,14 @@ class FeedReaderService:
             logger.error(f"Error fetching feed {feed_config['url']}: {e}")
             return None
     
-    def parse_atom_entry(self, entry: Dict, source: str) -> Dict[str, Any]:
+    def parse_atom_entry(self, entry: Dict, source: str, category: Optional[str] = None) -> Dict[str, Any]:
         """
         Parse an ATOM feed entry into alert data format
         
         Args:
             entry: Feed entry from feedparser
             source: Source identifier
+            category: Optional category override from feed config
             
         Returns:
             Alert data dictionary
@@ -86,7 +94,8 @@ class FeedReaderService:
             'public_timestamp': entry.get('published', entry.get('updated', '')),
             'description': entry.get('summary', ''),
             'data_source': source,
-            'source_urls': json.dumps([entry.get('link', '')])
+            'source_urls': json.dumps([entry.get('link', '')]),
+            'category_override': category  # Pass category from feed config
         }
         
         # Try to extract additional metadata from content
@@ -161,7 +170,8 @@ class FeedReaderService:
             alert.relevance_reason = reason
             alert.severity = severity
             alert.priority = priority
-            alert.alert_category = category
+            # Use category override from feed config if provided, otherwise use triage category
+            alert.alert_category = entry_data.get('category_override') or category
             
             # Set status based on relevance
             if relevance == "Auto-Relevant":
@@ -210,7 +220,7 @@ class FeedReaderService:
                 
                 new_count = 0
                 for entry in feed.entries[:50]:  # Process max 50 entries
-                    entry_data = self.parse_atom_entry(entry, feed_config['source'])
+                    entry_data = self.parse_atom_entry(entry, feed_config['source'], feed_config.get('category'))
                     alert = await self.process_feed_entry(entry_data, db)
                     if alert:
                         new_count += 1

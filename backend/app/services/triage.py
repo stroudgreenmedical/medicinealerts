@@ -18,8 +18,7 @@ class TriageService:
         'SAFETY_ROUNDUP': 'MHRA Safety Roundup',
         'DSU': 'Drug Safety Update',
         'SUPPLY_ALERT': 'Medicine Supply Alert',
-        'SSP': 'Serious Shortage Protocol',
-        'CAS': 'CAS Distribution'
+        'SSP': 'Serious Shortage Protocol'
     }
     
     def __init__(self):
@@ -101,15 +100,12 @@ class TriageService:
         if "serious shortage protocol" in title_lower or "ssp" in title_lower:
             return self.ALERT_CATEGORIES['SSP']
         
-        # Check for CAS distributions
-        if "cas" in alert_lower and "alert" in title_lower:
-            return self.ALERT_CATEGORIES['CAS']
-        
         # Default to most appropriate based on message type
         if "medical_safety_alert" in alert_lower:
             return self.ALERT_CATEGORIES['MEDICINES_RECALL']
         
-        return self.ALERT_CATEGORIES['CAS']  # Default category
+        # Default to Medical Device Alert for uncategorized items
+        return self.ALERT_CATEGORIES['DEVICE_ALERT']  # Default category
     
     def _determine_severity_priority(self, alert_type: str, message_type: str, category: str) -> Tuple[str, str]:
         """

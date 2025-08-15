@@ -332,7 +332,7 @@ function Dashboard() {
               Alert Categories
             </Typography>
             {(() => {
-              // Define all 8 alert categories
+              // Define all 7 alert categories (CAS removed as it's a distribution mechanism, not a category)
               const allCategories = [
                 { name: 'Medicines Recall', icon: '💊', color: '#ff9800' },
                 { name: 'National Patient Safety Alert', icon: '⚠️', color: '#f44336' },
@@ -340,8 +340,7 @@ function Dashboard() {
                 { name: 'MHRA Safety Roundup', icon: '📋', color: '#9c27b0' },
                 { name: 'Drug Safety Update', icon: '💉', color: '#3f51b5' },
                 { name: 'Medicine Supply Alert', icon: '📦', color: '#00bcd4' },
-                { name: 'Serious Shortage Protocol', icon: '🚨', color: '#ff5722' },
-                { name: 'CAS Distribution', icon: '📢', color: '#607d8b' }
+                { name: 'Serious Shortage Protocol', icon: '🚨', color: '#ff5722' }
               ];
               
               // Get counts from stats, defaulting to 0
