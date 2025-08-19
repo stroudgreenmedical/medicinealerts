@@ -1,17 +1,14 @@
 #!/bin/bash
 
 # Deploy script for MHRA Alerts to Synology NAS
-# This ensures the frontend is built with the correct API URL
+# Uses nginx reverse proxy for API calls to avoid mixed content issues
 
 echo "🚀 Starting deployment to Synology..."
 
-# Set the API URL for your Synology environment
-export VITE_API_URL="http://192.168.0.32:8081"
+echo "📦 Building Docker images with nginx proxy configuration..."
 
-echo "📦 Building Docker images with API URL: $VITE_API_URL"
-
-# Build the images with the correct build args
-docker-compose build --build-arg VITE_API_URL=$VITE_API_URL
+# Build the images (VITE_API_URL is empty to use relative paths)
+docker-compose build
 
 echo "🔄 Stopping existing containers..."
 docker-compose down

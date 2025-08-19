@@ -2,7 +2,8 @@
 FROM node:20-alpine as build
 
 # Accept build arguments
-ARG VITE_API_URL=http://localhost:8080
+# Empty means use relative URLs (same origin)
+ARG VITE_API_URL=
 
 # Set working directory
 WORKDIR /app
