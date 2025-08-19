@@ -23,6 +23,7 @@ import {
   Analytics as AnalyticsIcon,
   Logout as LogoutIcon,
   Notifications as NotificationsIcon,
+  BugReport as TestIcon,
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { dashboardApi } from '../services/api';
@@ -65,6 +66,7 @@ function Layout({ onLogout }: LayoutProps) {
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Alerts', icon: <AlertIcon />, path: '/alerts' },
     { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+    { text: 'System Test', icon: <TestIcon />, path: '/system-test' },
   ];
 
   const drawer = (

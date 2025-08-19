@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import AlertsList from './pages/AlertsList';
 import AlertDetail from './pages/AlertDetail';
 import Analytics from './pages/Analytics';
+import SystemTest from './pages/SystemTest';
 import Layout from './components/Layout';
 
 // NHS color theme
@@ -119,6 +120,7 @@ function App() {
             <Route path="alerts" element={<AlertsList />} />
             <Route path="alerts/:id" element={<AlertDetail />} />
             <Route path="analytics" element={<Analytics />} />
+            <Route path="system-test" element={<SystemTest />} />
           </Route>
         </Routes>
       </Router>

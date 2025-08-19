@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.routes import alerts, auth, dashboard, reports
+from app.api.routes import alerts, auth, dashboard, reports, system_test
 from app.services.scheduler import SchedulerService
 
 # Configure logging
@@ -73,6 +73,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(alerts.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
+app.include_router(system_test.router, prefix="/api")
 
 
 @app.get("/")
