@@ -12,7 +12,6 @@ from ..core.config import settings
 from ..models.alert import Alert, AlertStatus
 from .govuk_client import GovUKClient
 from .triage import TriageService
-from .teams_notify import TeamsNotificationService
 from .alert_processor import AlertProcessor
 from .feed_reader import FeedReaderService
 
@@ -26,7 +25,6 @@ class SchedulerService:
         self.scheduler = AsyncIOScheduler()
         self.govuk_client = GovUKClient()
         self.triage_service = TriageService()
-        self.teams_service = TeamsNotificationService()
         self.alert_processor = AlertProcessor()
         self.feed_reader = FeedReaderService()
         
@@ -114,10 +112,8 @@ class SchedulerService:
                     if alert:
                         new_count += 1
                         
-                        # Send Teams notification if relevant
                         if alert.auto_relevance == "Auto-Relevant":
                             relevant_count += 1
-                            await self.teams_service.send_alert_notification(alert)
                 
                 db.commit()
                 
@@ -126,20 +122,13 @@ class SchedulerService:
             
             logger.info(f"Polling complete: {new_count} new alerts, {relevant_count} relevant")
             
-            # Send summary if there were new alerts
+            # Log summary if there were new alerts
             if new_count > 0:
-                await self.teams_service.send_summary_notification(
-                    new_alerts=new_count,
-                    relevant_alerts=relevant_count,
-                    period_hours=settings.POLL_INTERVAL_HOURS
-                )
+                logger.info(f"Alert summary: {new_count} new alerts, {relevant_count} relevant")
                 
         except Exception as e:
             logger.error(f"Error in polling job: {e}")
-            await self.teams_service.send_error_notification(
-                "Alert polling failed",
-                str(e)
-            )
+            logger.error(f"Alert polling failed: {str(e)}")
     
     async def send_daily_summary(self):
         """Send daily summary of alerts"""
@@ -168,13 +157,9 @@ class SchedulerService:
             - Overdue: {len(overdue_alerts)}
             """
             
-            # Send notification if there are pending items
+            # Log if there are pending items
             if pending_alerts > 0 or len(overdue_alerts) > 0:
-                await self.teams_service.send_summary_notification(
-                    new_alerts=new_alerts,
-                    relevant_alerts=pending_alerts,
-                    period_hours=24
-                )
+                logger.info(f"Daily summary: {new_alerts} new, {pending_alerts} pending, {len(overdue_alerts)} overdue")
                 
         finally:
             db.close()
@@ -332,12 +317,8 @@ class SchedulerService:
             if total_new > 0:
                 logger.info(f"RSS polling complete: {total_new} new alerts from feeds")
                 
-                # Send notification if configured
-                await self.teams_service.send_summary_notification(
-                    new_alerts=total_new,
-                    relevant_alerts=0,  # Will be determined by triage
-                    period_hours=1
-                )
+                # Log the RSS feed results
+                logger.info(f"RSS feed summary: {total_new} new alerts found")
             else:
                 logger.info("RSS polling complete: no new alerts")
                 

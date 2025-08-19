@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
 from app.services.govuk_client import GovUKClient
 from app.services.alert_processor import AlertProcessor
-from app.services.teams_notify import TeamsNotificationService
 from app.core.config import settings
 from app.core.database import SessionLocal
 import json
@@ -19,7 +18,6 @@ class AlertSystemTester:
     def __init__(self):
         self.govuk_client = GovUKClient()
         self.processor = AlertProcessor()
-        self.teams = TeamsNotificationService()
         self.results = []
         
     async def test_govuk_api_connectivity(self):

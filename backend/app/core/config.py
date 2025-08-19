@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = Field(default="anjan.chakraborty@nhs.net")
     ADMIN_PASSWORD: str = Field(default="changeme")  # Must be changed in production
     
-    # Teams
-    TEAMS_WEBHOOK_URL: Optional[str] = Field(default=None)
-    
     # GOV.UK APIs
     GOVUK_SEARCH_API: str = "https://www.gov.uk/api/search.json"
     GOVUK_CONTENT_API: str = "https://www.gov.uk/api/content"
