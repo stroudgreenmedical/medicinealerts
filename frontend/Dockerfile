@@ -1,6 +1,9 @@
 # Multi-stage build for production-ready React app
 FROM node:20-alpine as build
 
+# Accept build arguments
+ARG VITE_API_URL=http://localhost:8080
+
 # Set working directory
 WORKDIR /app
 
@@ -12,6 +15,9 @@ RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Set environment variable for build
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application for production
 RUN npm run build
